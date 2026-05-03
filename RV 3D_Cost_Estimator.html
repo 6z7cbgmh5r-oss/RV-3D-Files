@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RV 3D Cost Estimator</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; padding: 2rem 1rem; }
+  #root { max-width: 860px; margin: 0 auto; }
+
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #5f5e5a; margin-bottom: 1.5rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2rem; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: #5f5e5a; margin-bottom: 10px; }
+  .card { background: #fff; border: 0.5px solid rgba(0,0,0,0.12); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 0; }
+  .row-label { flex: 0 0 160px; font-size: 14px; }
+  .row-hint { font-size: 12px; color: #5f5e5a; display: block; }
+  .row-input { flex: 1; display: flex; align-items: center; gap: 6px; }
+
+  input[type="number"], select {
+    border: 0.5px solid rgba(0,0,0,0.2); border-radius: 8px;
+    padding: 6px 10px; font-size: 14px; background: #fff;
+    color: #1a1a18; outline: none; height: 36px;
+  }
+  input[type="number"] { width: 90px; text-align: right; }
+  input[type="number"]:focus, select:focus { border-color: #378add; box-shadow: 0 0 0 3px rgba(55,138,221,0.15); }
+  select { width: 130px; cursor: pointer; }
+
+  input[type="range"] {
+    flex: 1; -webkit-appearance: none; height: 4px;
+    background: #d3d1c7; border-radius: 99px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: #378add; border: none;
+  }
+  input[type="range"]:focus { box-shadow: 0 0 0 3px rgba(55,138,221,0.15); }
+
+  .affix { font-size: 13px; color: #5f5e5a; }
+
+  .bar-row { margin-bottom: 10px; }
+  .bar-meta { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .bar-meta-label { color: #5f5e5a; }
+  .bar-meta-value { font-weight: 500; }
+  .bar-meta-pct { font-weight: 400; color: #5f5e5a; }
+  .bar-track { height: 6px; background: #e8e7e2; border-radius: 99px; }
+  .bar-fill { height: 6px; border-radius: 99px; transition: width 0.3s; }
+
+  .summary-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: #5f5e5a; margin-bottom: 12px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 500px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { border-radius: 8px; padding: 12px 14px; background: #f1efe8; }
+  .stat-card.accent { background: #e6f1fb; border: 0.5px solid rgba(55,138,221,0.3); }
+  .stat-card-label { font-size: 12px; font-weight: 500; color: #5f5e5a; margin-bottom: 4px; }
+  .stat-card.accent .stat-card-label { color: #185fa5; }
+  .stat-card-value { font-size: 20px; font-weight: 500; }
+  .stat-card.accent .stat-card-value { color: #185fa5; }
+  .per-unit { font-size: 12px; color: #5f5e5a; margin-top: 8px; }
+
+  .divider { border: none; border-top: 0.5px solid rgba(0,0,0,0.1); margin: 0.5rem 0 1.25rem; }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-value { font-size: 14px; font-weight: 500; min-width: 36px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const FILAMENTS = [
+  { label: "PLA", id: "pla" },
+  { label: "PETG", id: "petg" },
+  { label: "ABS", id: "abs" },
+  { label: "TPU", id: "tpu" },
+  { label: "ASA", id: "asa" },
+  { label: "Nylon", id: "nylon" },
+];
+
+const fmtAUD = n => `A$${n.toFixed(2)}`;
+
+function Section({ title, children }) {
+  return (
+    <div>
+      <p className="section-label">{title}</p>
+      <div className="card">{children}</div>
+    </div>
+  );
+}
+
+function Row({ label, hint, children }) {
+  return (
+    <div className="row">
+      <div className="row-label">
+        <span>{label}</span>
+        {hint && <span className="row-hint">{hint}</span>}
+      </div>
+      <div className="row-input">{children}</div>
+    </div>
+  );
+}
+
+function Num({ value, onChange, min = 0, step = 0.01, prefix, suffix }) {
+  return (
+    <>
+      {prefix && <span className="affix">{prefix}</span>}
+      <input type="number" min={min} step={step} value={value}
+        onChange={e => onChange(parseFloat(e.target.value) || 0)} />
+      {suffix && <span className="affix">{suffix}</span>}
+    </>
+  );
+}
+
+function Bar({ label, value, total, color }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="bar-row">
+      <div className="bar-meta">
+        <span className="bar-meta-label">{label}</span>
+        <span className="bar-meta-value">{fmtAUD(value)} <span className="bar-meta-pct">({pct}%)</span></span>
+      </div>
+      <div className="bar-track">
+        <div className="bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }) {
+  return (
+    <div className={`stat-card${accent ? " accent" : ""}`}>
+      <div className="stat-card-label">{label}</div>
+      <div className="stat-card-value">{value}</div>
+    </div>
+  );
+}
+
+function App() {
+  const [filament, setFilament] = useState("petg");
+  const [spoolCost, setSpoolCost] = useState(28);
+  const [spoolWeight, setSpoolWeight] = useState(1000);
+  const [printGrams, setPrintGrams] = useState(85);
+  const [wastePct, setWastePct] = useState(5);
+  const [printHours, setPrintHours] = useState(4.5);
+  const [powerWatts, setPowerWatts] = useState(150);
+  const [powerRate, setPowerRate] = useState(0.30);
+  const [labourHours, setLabourHours] = useState(0.5);
+  const [labourRate, setLabourRate] = useState(62.5);
+  const [overhead, setOverhead] = useState(2.00);
+  const [margin, setMargin] = useState(60);
+  const [qty, setQty] = useState(1);
+
+  const c = useMemo(() => {
+    const costPerGram = spoolWeight > 0 ? spoolCost / spoolWeight : 0;
+    const totalGrams = printGrams * (1 + wastePct / 100);
+    const material = costPerGram * totalGrams;
+    const electricity = (powerWatts / 1000) * printHours * powerRate;
+    const labour = labourHours * labourRate;
+    const totalCost = material + electricity + labour + overhead;
+    const sellUnit = margin < 100 ? totalCost / (1 - margin / 100) : 0;
+    const profit = sellUnit - totalCost;
+    return { material, electricity, labour, overhead, totalCost, sellUnit, profit };
+  }, [spoolCost, spoolWeight, printGrams, wastePct, powerWatts, printHours, powerRate, labourHours, labourRate, overhead, margin]);
+
+  return (
+    <div>
+      <h1>RV 3D cost estimator</h1>
+      <p className="subtitle">Per-unit pricing for any printed product</p>
+
+      <div className="grid-2">
+        <div>
+          <Section title="Material">
+            <Row label="Filament type">
+              <select value={filament} onChange={e => setFilament(e.target.value)}>
+                {FILAMENTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+              </select>
+            </Row>
+            <Row label="Spool cost" hint="per spool">
+              <Num value={spoolCost} onChange={setSpoolCost} step={0.5} prefix="A$" />
+            </Row>
+            <Row label="Spool weight">
+              <Num value={spoolWeight} onChange={setSpoolWeight} step={50} suffix="g" />
+            </Row>
+            <Row label="Print weight" hint="net grams used">
+              <Num value={printGrams} onChange={setPrintGrams} step={1} suffix="g" />
+            </Row>
+            <Row label="Waste allowance">
+              <Num value={wastePct} onChange={setWastePct} step={1} suffix="%" />
+            </Row>
+          </Section>
+
+          <Section title="Electricity">
+            <Row label="Print time">
+              <Num value={printHours} onChange={setPrintHours} step={0.25} suffix="hrs" />
+            </Row>
+            <Row label="Printer draw" hint="typical 100–250 W">
+              <Num value={powerWatts} onChange={setPowerWatts} step={10} suffix="W" />
+            </Row>
+            <Row label="Power rate">
+              <Num value={powerRate} onChange={setPowerRate} step={0.01} prefix="A$" suffix="/kWh" />
+            </Row>
+          </Section>
+        </div>
+
+        <div>
+          <Section title="Labour & overhead">
+            <Row label="Finishing time" hint="post-processing hrs">
+              <Num value={labourHours} onChange={setLabourHours} step={0.25} suffix="hrs" />
+            </Row>
+            <Row label="Labour rate">
+              <Num value={labourRate} onChange={setLabourRate} step={0.5} prefix="A$" suffix="/hr" />
+            </Row>
+            <Row label="Fixed overhead" hint="packaging, wear, etc.">
+              <Num value={overhead} onChange={setOverhead} step={0.25} prefix="A$" />
+            </Row>
+          </Section>
+
+          <Section title="Pricing">
+            <Row label="Target margin">
+              <div className="range-row" style={{ flex: 1 }}>
+                <input type="range" min={10} max={90} step={1} value={margin}
+                  onChange={e => setMargin(+e.target.value)} />
+                <span className="range-value">{margin}%</span>
+              </div>
+            </Row>
+            <Row label="Quantity">
+              <Num value={qty} onChange={setQty} min={1} step={1} suffix="units" />
+            </Row>
+          </Section>
+
+          <Section title="Cost breakdown">
+            <Bar label="Material" value={c.material} total={c.totalCost} color="#378ADD" />
+            <Bar label="Electricity" value={c.electricity} total={c.totalCost} color="#1D9E75" />
+            <Bar label="Labour" value={c.labour} total={c.totalCost} color="#BA7517" />
+            <Bar label="Overhead" value={c.overhead} total={c.totalCost} color="#888780" />
+          </Section>
+        </div>
+      </div>
+
+      <hr className="divider" />
+      <p className="summary-label">{qty > 1 ? `Summary — ${qty} units` : "Summary — per unit"}</p>
+      <div className="stat-grid">
+        <StatCard label="Total cost" value={fmtAUD(qty > 1 ? c.totalCost * qty : c.totalCost)} />
+        <StatCard label="Sell price" value={fmtAUD(qty > 1 ? c.sellUnit * qty : c.sellUnit)} accent />
+        <StatCard label="Profit" value={fmtAUD(qty > 1 ? c.profit * qty : c.profit)} />
+        <StatCard label="Margin" value={`${margin}%`} />
+      </div>
+      {qty > 1 && (
+        <p className="per-unit">
+          Per unit: cost {fmtAUD(c.totalCost)} · sell {fmtAUD(c.sellUnit)} · profit {fmtAUD(c.profit)}
+        </p>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
