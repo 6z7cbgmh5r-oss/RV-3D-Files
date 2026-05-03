@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RV 3D Tools</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;padding:2rem 1rem}
+.wrap{max-width:600px;margin:0 auto}
+.header{margin-bottom:2rem}
+.header h1{font-size:26px;font-weight:500;margin-bottom:4px}
+.header p{font-size:15px;color:#5f5e5a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+.tool-card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:14px;padding:1.25rem;text-decoration:none;color:#1a1a18;display:flex;flex-direction:column;gap:8px;transition:box-shadow 0.15s,transform 0.15s}
+.tool-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);transform:translateY(-2px)}
+.tool-icon{font-size:28px;line-height:1}
+.tool-name{font-size:16px;font-weight:500}
+.tool-desc{font-size:13px;color:#5f5e5a;line-height:1.5}
+.tool-card.estimator{border-top:3px solid #378add}
+.tool-card.catalogue{border-top:3px solid #1D9E75}
+.tool-card.painpoints{border-top:3px solid #e05c2a}
+.tool-card.ideas{border-top:3px solid #BA7517}
+.tool-card.forecaster{border-top:3px solid #7C5CBF}
+.footer{margin-top:2rem;font-size:12px;color:#888780;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>RV 3D Tools</h1>
+    <p>Your product, cost & planning toolkit</p>
+  </div>
+  <div class="grid">
+    <a href="rv3d-catalogue.html" class="tool-card catalogue">
+      <div class="tool-icon">📦</div>
+      <div class="tool-name">Product catalogue</div>
+      <div class="tool-desc">All your products with live cost breakdown, sell price, and margin</div>
+    </a>
+    <a href="rv3d-estimator.html" class="tool-card estimator">
+      <div class="tool-icon">🧮</div>
+      <div class="tool-name">Cost estimator</div>
+      <div class="tool-desc">Per-unit pricing — material, electricity, labour, and margin</div>
+    </a>
+    <a href="rv3d-forecaster.html" class="tool-card forecaster">
+      <div class="tool-icon">🖨️</div>
+      <div class="tool-name">Print queue forecaster</div>
+      <div class="tool-desc">Build your print queue and see total time and material cost</div>
+    </a>
+    <a href="rv3d-painpoints.html" class="tool-card painpoints">
+      <div class="tool-icon">📋</div>
+      <div class="tool-name">Pain points board</div>
+      <div class="tool-desc">Kanban board for customer problems worth solving</div>
+    </a>
+    <a href="rv3d-ideas.html" class="tool-card ideas">
+      <div class="tool-icon">💡</div>
+      <div class="tool-name">Idea capture</div>
+      <div class="tool-desc">Log and filter ideas across RV 3D, consulting, and motorhome</div>
+    </a>
+  </div>
+  <div class="footer">RV 3D · Nouméa</div>
+</div>
+</body>
+</html>
