@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Product Catalogue — RV 3D</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;padding:2rem 1rem}
+#root{max-width:960px;margin:0 auto}
+h1{font-size:22px;font-weight:500;margin-bottom:4px}
+.sub{font-size:14px;color:#5f5e5a;margin-bottom:1.5rem}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:12px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.btn{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:7px 14px;font-size:14px;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit}
+.btn:hover{background:#f1efe8}
+.btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#a32d2d;border-color:rgba(163,45,45,0.3)}
+.btn-danger:hover{background:#fcebeb}
+.btn-sm{padding:4px 10px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card-img{width:100%;height:160px;object-fit:cover;background:#f1efe8;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
+.card-img img{width:100%;height:160px;object-fit:cover}
+.card-body{padding:14px;flex:1;display:flex;flex-direction:column;gap:8px}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card-name{font-size:15px;font-weight:500;line-height:1.4}
+.badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+.card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.stat{background:#f5f4f0;border-radius:8px;padding:8px 10px}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#888780;margin-bottom:2px}
+.stat-value{font-size:14px;font-weight:500}
+.stat-value.green{color:#0f6e56}
+.stat-value.blue{color:#185fa5}
+.card-notes{font-size:12px;color:#5f5e5a;line-height:1.5}
+.card-footer{display:flex;gap:6px;justify-content:flex-end;margin-top:auto;padding-top:8px;border-top:0.5px solid rgba(0,0,0,0.07)}
+.cost-breakdown{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.cost-row{display:flex;justify-content:space-between;font-size:12px;color:#5f5e5a}
+.cost-row.total{font-weight:500;color:#1a1a18;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:4px;margin-top:2px}
+select,input[type=text],input[type=number],input[type=url],textarea{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:6px 10px;font-size:14px;background:#fff;color:#1a1a18;outline:none;font-family:inherit}
+select:focus,input:focus,textarea:focus{border-color:#378add;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
+textarea{width:100%;resize:vertical;min-height:70px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:18px;font-weight:500;margin-bottom:1.25rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:13px;color:#5f5e5a;margin-bottom:4px}
+.field select,.field input,.field textarea{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.section-divider{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#888780;margin:1.25rem 0 0.75rem;padding-top:1rem;border-top:0.5px solid rgba(0,0,0,0.1)}
+.row-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem}
+.row-btns-right{display:flex;gap:8px}
+.calc-preview{background:#f5f4f0;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:13px}
+.calc-preview-row{display:flex;justify-content:space-between;color:#5f5e5a;margin-bottom:3px}
+.calc-preview-total{display:flex;justify-content:space-between;font-weight:600;color:#1a1a18;border-top:0.5px solid rgba(0,0,0,0.12);padding-top:6px;margin-top:4px}
+.empty{text-align:center;padding:4rem 1rem;color:#5f5e5a;font-size:14px}
+.count{font-size:13px;color:#5f5e5a}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo}=React;
+const FILAMENTS=['PLA','PETG','ABS','TPU','ASA','Nylon'];
+const STATUSES=['Concept','Prototyping','Active','Retired'];
+const STA_BG={Concept:'#E6F1FB',Prototyping:'#FAEEDA',Active:'#E1F5EE',Retired:'#F1EFE8'};
+const STA_TX={Concept:'#185FA5',Prototyping:'#854F0B',Active:'#0F6E56',Retired:'#5F5E5A'};
+const LS='rv3d_catalogue';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fAUD=n=>isNaN(n)?'—':`A$${Number(n).toFixed(2)}`;
+const fPct=n=>isNaN(n)||!isFinite(n)?'—':`${Math.round(n)}%`;
+const blank={name:'',filament:'PETG',spoolCost:28,spoolWeight:1000,printGrams:50,wastePct:5,printHours:2,powerWatts:150,powerRate:0.30,labourHours:0.25,labourRate:62.5,overhead:2,margin:60,status:'Concept',notes:'',photoUrl:''};
+
+function calcCosts(f){
+  const mat=(f.spoolWeight>0?f.spoolCost/f.spoolWeight:0)*f.printGrams*(1+f.wastePct/100);
+  const elec=(f.powerWatts/1000)*f.printHours*f.powerRate;
+  const labour=f.labourHours*f.labourRate;
+  const oh=Number(f.overhead)||0;
+  const total=mat+elec+labour+oh;
+  const sell=f.margin<100?total/(1-f.margin/100):0;
+  const profit=sell-total;
+  return{mat,elec,labour,oh,total,sell,profit};
+}
+
+function NumField({label,value,onChange,prefix,suffix,step=0.01,hint}){
+  return(
+    <div className="field">
+      <label>{label}{hint&&<span style={{color:'#888780',fontWeight:400}}> — {hint}</span>}</label>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        {prefix&&<span style={{fontSize:13,color:'#5f5e5a'}}>{prefix}</span>}
+        <input type="number" style={{flex:1}} min={0} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value)||0)}/>
+        {suffix&&<span style={{fontSize:13,color:'#5f5e5a'}}>{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function Modal({item,onSave,onDelete,onClose}){
+  const[f,setF]=useState(item||blank);
+  const set=k=>v=>setF(p=>({...p,[k]:v}));
+  const setE=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const setN=k=>e=>setF(p=>({...p,[k]:parseFloat(e.target.value)||0}));
+  const c=useMemo(()=>calcCosts(f),[f]);
+  return(
+    <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+      <div className="modal">
+        <h2>{item?'Edit product':'New product'}</h2>
+        <div className="grid2">
+          <div className="field"><label>Product name</label><input value={f.name} onChange={setE('name')} placeholder="e.g. Awning channel clip"/></div>
+          <div className="field"><label>Status</label><select value={f.status} onChange={setE('status')}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+        </div>
+        <div className="field">
+          <label>Photo <span style={{color:'#888780',fontWeight:400}}>(optional)</span></label>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            {f.photoUrl&&<img src={f.photoUrl} alt="preview" style={{width:56,height:56,objectFit:'cover',borderRadius:8,border:'0.5px solid rgba(0,0,0,0.12)',flexShrink:0}}/>}
+            <label style={{cursor:'pointer',flex:1}}>
+              <div style={{border:'0.5px dashed rgba(0,0,0,0.25)',borderRadius:8,padding:'10px 14px',textAlign:'center',fontSize:13,color:'#5f5e5a',background:'#f5f4f0'}}>
+                {f.photoUrl?'Replace image':'Click to choose image from your Mac'}
+              </div>
+              <input type="file" accept="image/*" style={{display:'none'}} onChange={e=>{
+                const file=e.target.files[0];
+                if(!file)return;
+                const reader=new FileReader();
+                reader.onload=ev=>{
+                  const img=new Image();
+                  img.onload=()=>{
+                    const MAX=800;
+                    const scale=Math.min(1,MAX/Math.max(img.width,img.height));
+                    const canvas=document.createElement('canvas');
+                    canvas.width=Math.round(img.width*scale);
+                    canvas.height=Math.round(img.height*scale);
+                    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+                    setF(p=>({...p,photoUrl:canvas.toDataURL('image/jpeg',0.82)}));
+                  };
+                  img.src=ev.target.result;
+                };
+                reader.readAsDataURL(file);
+              }}/>
+            </label>
+            {f.photoUrl&&<button className="btn btn-sm btn-danger" onClick={()=>setF(p=>({...p,photoUrl:''}))}>Remove</button>}
+          </div>
+        </div>
+
+        <div className="section-divider">Material</div>
+        <div className="grid3">
+          <div className="field"><label>Filament</label><select value={f.filament} onChange={setE('filament')}>{FILAMENTS.map(s=><option key={s}>{s}</option>)}</select></div>
+          <NumField label="Spool cost" value={f.spoolCost} onChange={set('spoolCost')} prefix="A$" step={0.5}/>
+          <NumField label="Spool weight" value={f.spoolWeight} onChange={set('spoolWeight')} suffix="g" step={50}/>
+        </div>
+        <div className="grid2">
+          <NumField label="Print weight" value={f.printGrams} onChange={set('printGrams')} suffix="g" step={1}/>
+          <NumField label="Waste" value={f.wastePct} onChange={set('wastePct')} suffix="%" step={1}/>
+        </div>
+
+        <div className="section-divider">Electricity</div>
+        <div className="grid3">
+          <NumField label="Print time" value={f.printHours} onChange={set('printHours')} suffix="hrs" step={0.25}/>
+          <NumField label="Printer draw" value={f.powerWatts} onChange={set('powerWatts')} suffix="W" step={10}/>
+          <NumField label="Power rate" value={f.powerRate} onChange={set('powerRate')} prefix="A$" suffix="/kWh"/>
+        </div>
+
+        <div className="section-divider">Labour & overhead</div>
+        <div className="grid3">
+          <NumField label="Finishing time" value={f.labourHours} onChange={set('labourHours')} suffix="hrs" step={0.25}/>
+          <NumField label="Labour rate" value={f.labourRate} onChange={set('labourRate')} prefix="A$" suffix="/hr" step={0.5}/>
+          <NumField label="Fixed overhead" value={f.overhead} onChange={set('overhead')} prefix="A$" step={0.25}/>
+        </div>
+
+        <div className="section-divider">Pricing</div>
+        <div className="field">
+          <label>Target margin — <strong>{f.margin}%</strong></label>
+          <input type="range" min={10} max={90} step={1} value={f.margin} onChange={e=>setF(p=>({...p,margin:+e.target.value}))} style={{width:'100%',marginTop:6}}/>
+        </div>
+
+        <div className="calc-preview">
+          <div className="calc-preview-row"><span>Material</span><span>{fAUD(c.mat)}</span></div>
+          <div className="calc-preview-row"><span>Electricity</span><span>{fAUD(c.elec)}</span></div>
+          <div className="calc-preview-row"><span>Labour</span><span>{fAUD(c.labour)}</span></div>
+          <div className="calc-preview-row"><span>Overhead</span><span>{fAUD(c.oh)}</span></div>
+          <div className="calc-preview-total"><span>Total cost → Sell price</span><span>{fAUD(c.total)} → {fAUD(c.sell)}</span></div>
+        </div>
+
+        <div className="field"><label>Notes</label><textarea value={f.notes} onChange={setE('notes')} placeholder="Observations, variants, sourcing tips..."/></div>
+
+        <div className="row-btns">
+          <div>{item&&<button className="btn btn-danger btn-sm" onClick={()=>{if(confirm('Delete product?'))onDelete(item.id)}}>Delete</button>}</div>
+          <div className="row-btns-right">
+            <button className="btn" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={()=>f.name.trim()&&onSave(f)}>Save product</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({item,onEdit}){
+  const c=useMemo(()=>calcCosts(item),[item]);
+  return(
+    <div className="card">
+      <div className="card-img">
+        {item.photoUrl?<img src={item.photoUrl} alt={item.name} onError={e=>e.target.style.display='none'}/>:<span>🖨️</span>}
+      </div>
+      <div className="card-body">
+        <div className="card-top">
+          <span className="card-name">{item.name}</span>
+          <span className="badge" style={{background:STA_BG[item.status],color:STA_TX[item.status]}}>{item.status}</span>
+        </div>
+        <div className="card-stats">
+          <div className="stat"><div className="stat-label">Cost</div><div className="stat-value">{fAUD(c.total)}</div></div>
+          <div className="stat"><div className="stat-label">Sell</div><div className="stat-value blue">{fAUD(c.sell)}</div></div>
+          <div className="stat"><div className="stat-label">Margin</div><div className="stat-value green">{fPct(item.margin)}</div></div>
+        </div>
+        <div className="cost-breakdown">
+          <div className="cost-row"><span>Material ({item.filament}, {item.printGrams}g)</span><span>{fAUD(c.mat)}</span></div>
+          <div className="cost-row"><span>Electricity ({item.printHours}h)</span><span>{fAUD(c.elec)}</span></div>
+          <div className="cost-row"><span>Labour ({item.labourHours}h)</span><span>{fAUD(c.labour)}</span></div>
+          <div className="cost-row"><span>Overhead</span><span>{fAUD(c.oh)}</span></div>
+          <div className="cost-row total"><span>Profit per unit</span><span>{fAUD(c.profit)}</span></div>
+        </div>
+        {item.notes&&<div className="card-notes">{item.notes.length>100?item.notes.slice(0,100)+'…':item.notes}</div>}
+        <div className="card-footer">
+          <button className="btn btn-sm" onClick={()=>onEdit(item)}>Edit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[items,setItems]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS))||[]}catch{return[]}});
+  const[modal,setModal]=useState(null);
+  const[fSta,setFSta]=useState('All');
+  useEffect(()=>localStorage.setItem(LS,JSON.stringify(items)),[items]);
+  const save=f=>{
+    if(modal==='new')setItems(p=>[{...f,id:uid(),date:Date.now()},...p]);
+    else setItems(p=>p.map(i=>i.id===modal.id?{...i,...f}:i));
+    setModal(null);
+  };
+  const del=id=>{setItems(p=>p.filter(i=>i.id!==id));setModal(null)};
+  const list=useMemo(()=>{
+    let r=items;
+    if(fSta!=='All')r=r.filter(i=>i.status===fSta);
+    return r;
+  },[items,fSta]);
+  return(
+    <>
+      <div className="topbar">
+        <div><h1>Product catalogue</h1><p className="sub">RV 3D — live cost & pricing for every product</p></div>
+        <button className="btn btn-primary" onClick={()=>setModal('new')}>+ New product</button>
+      </div>
+      <div className="filters">
+        <select value={fSta} onChange={e=>setFSta(e.target.value)}><option>All</option>{STATUSES.map(s=><option key={s}>{s}</option>)}</select>
+        <span className="count">{list.length} product{list.length!==1?'s':''}</span>
+      </div>
+      {list.length===0
+        ?<div className="empty">{items.length===0?'No products yet — add your first one.':'No products match this filter.'}</div>
+        :<div className="grid">{list.map(i=><ProductCard key={i.id} item={i} onEdit={setModal}/>)}</div>
+      }
+      {modal&&<Modal item={modal==='new'?null:modal} onSave={save} onDelete={del} onClose={()=>setModal(null)}/>}
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

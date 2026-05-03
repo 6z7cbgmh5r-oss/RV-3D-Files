@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Print Queue Forecaster — RV 3D</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;padding:2rem 1rem}
+#root{max-width:860px;margin:0 auto}
+h1{font-size:22px;font-weight:500;margin-bottom:4px}
+.sub{font-size:14px;color:#5f5e5a;margin-bottom:1.5rem}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start}
+@media(max-width:660px){.layout{grid-template-columns:1fr}}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#5f5e5a;margin-bottom:10px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+select,input[type=text],input[type=number]{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:6px 10px;font-size:14px;background:#fff;color:#1a1a18;outline:none;font-family:inherit;width:100%}
+select:focus,input:focus{border-color:#378add;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
+.btn{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:7px 14px;font-size:14px;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:hover{background:#f1efe8}
+.btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.btn-primary:hover{background:#333}
+.btn-primary:disabled{background:#aaa;border-color:#aaa;cursor:default}
+.btn-danger{color:#a32d2d;border-color:rgba(163,45,45,0.3)}
+.btn-danger:hover{background:#fcebeb}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-full{width:100%;margin-top:12px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;color:#5f5e5a;margin-bottom:4px}
+.affix-wrap{display:flex;align-items:center;gap:6px}
+.affix-wrap input{flex:1;width:auto}
+.affix{font-size:13px;color:#5f5e5a;white-space:nowrap}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.divider{border:none;border-top:0.5px solid rgba(0,0,0,0.1);margin:12px 0}
+.catalogue-picker{background:#f5f4f0;border-radius:10px;padding:12px;margin-bottom:12px}
+.catalogue-picker-label{font-size:12px;color:#5f5e5a;margin-bottom:6px;font-weight:500}
+.catalogue-hint{font-size:12px;color:#888780;margin-top:6px}
+.autofilled{background:#e8f5ee;border-radius:8px;padding:8px 12px;font-size:13px;color:#0f5e3e;margin-top:8px;display:flex;align-items:center;gap:6px}
+.job-list{display:flex;flex-direction:column;gap:8px}
+.job-card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:10px;padding:12px 14px}
+.job-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.job-name{font-size:14px;font-weight:500}
+.job-meta{display:flex;gap:12px;font-size:13px;color:#5f5e5a}
+.job-costs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.job-stat{background:#f5f4f0;border-radius:7px;padding:6px 10px;font-size:12px;flex:1;min-width:80px}
+.job-stat-label{color:#888780;margin-bottom:2px}
+.job-stat-value{font-weight:500;font-size:13px}
+.fil-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:#e6f1fb;color:#185fa5;flex-shrink:0}
+.cat-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:#e1f5ee;color:#0f5e3e;flex-shrink:0}
+.empty-queue{text-align:center;padding:2.5rem 1rem;color:#888780;font-size:14px;border:0.5px dashed rgba(0,0,0,0.15);border-radius:10px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.sum-card{border-radius:9px;padding:12px 14px;background:#f1efe8}
+.sum-card.accent{background:#e6f1fb}
+.sum-card.green{background:#e1f5ee}
+.sum-label{font-size:11px;color:#5f5e5a;font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
+.sum-value{font-size:18px;font-weight:500}
+.sum-card.accent .sum-label{color:#185fa5}
+.sum-card.accent .sum-value{color:#185fa5}
+.sum-card.green .sum-label{color:#0f5e3e}
+.sum-card.green .sum-value{color:#0f5e3e}
+.total-box{background:#1a1a18;color:#fff;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.total-box-label{font-size:13px;color:#aaa}
+.total-box-value{font-size:22px;font-weight:500}
+.bar-wrap{margin-bottom:6px}
+.bar-row-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bar-track{height:5px;background:#e8e7e2;border-radius:99px}
+.bar-fill{height:5px;border-radius:99px;transition:width 0.3s}
+.no-catalogue{font-size:12px;color:#888780;font-style:italic}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo}=React;
+const FILAMENTS=['PLA','PETG','ABS','TPU','ASA','Nylon'];
+const LS_JOBS='rv3d_fcast_jobs';
+const LS_SETTINGS='rv3d_fcast_settings';
+const LS_CAT='rv3d_catalogue';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fAUD=n=>`A$${Number(n).toFixed(2)}`;
+
+function fTime(mins){
+  if(!mins&&mins!==0)return'—';
+  const h=Math.floor(mins/60),m=Math.round(mins%60);
+  return h>0?`${h}h ${m}m`:`${m}m`;
+}
+
+function calcJob(job,settings){
+  const{spoolCost,spoolWeight,powerWatts,powerRate}=settings;
+  const filCost=(spoolWeight>0?spoolCost/spoolWeight:0)*job.grams;
+  const elec=(powerWatts/1000)*(job.mins/60)*powerRate;
+  return{filCost,elec,total:filCost+elec};
+}
+
+function Bar({label,value,total,color}){
+  const pct=total>0?Math.round(value/total*100):0;
+  return(
+    <div className="bar-wrap">
+      <div className="bar-row-meta">
+        <span style={{color:'#5f5e5a'}}>{label}</span>
+        <span style={{fontWeight:500}}>{fAUD(value)} <span style={{color:'#888780',fontWeight:400}}>({pct}%)</span></span>
+      </div>
+      <div className="bar-track"><div className="bar-fill" style={{width:`${pct}%`,background:color}}/></div>
+    </div>
+  );
+}
+
+function JobCard({job,settings,onDelete}){
+  const c=useMemo(()=>calcJob(job,settings),[job,settings]);
+  return(
+    <div className="job-card">
+      <div className="job-header">
+        <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+          <span className="job-name">{job.name}</span>
+          <span className="fil-badge">{job.filament}</span>
+          {job.fromCatalogue&&<span className="cat-badge">from catalogue</span>}
+        </div>
+        <button className="btn btn-sm btn-danger" onClick={()=>onDelete(job.id)}>Remove</button>
+      </div>
+      <div className="job-meta">
+        <span>🕐 {fTime(job.mins)}</span>
+        <span>🧵 {job.grams}g</span>
+      </div>
+      <div className="job-costs">
+        <div className="job-stat"><div className="job-stat-label">Filament</div><div className="job-stat-value">{fAUD(c.filCost)}</div></div>
+        <div className="job-stat"><div className="job-stat-label">Electricity</div><div className="job-stat-value">{fAUD(c.elec)}</div></div>
+        <div className="job-stat"><div className="job-stat-label">Job total</div><div className="job-stat-value">{fAUD(c.total)}</div></div>
+      </div>
+    </div>
+  );
+}
+
+const defaultSettings={spoolCost:28,spoolWeight:1000,powerWatts:350,powerRate:0.30};
+const emptyForm={name:'',filament:'PETG',grams:'',mins:''};
+
+function App(){
+  const[jobs,setJobs]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS_JOBS))||[]}catch{return[]}});
+  const[settings,setSettings]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS_SETTINGS))||defaultSettings}catch{return defaultSettings}});
+  const[catalogue,setCatalogue]=useState([]);
+  const[form,setForm]=useState(emptyForm);
+  const[selectedProduct,setSelectedProduct]=useState('');
+  const[autofilled,setAutofilled]=useState(false);
+
+  useEffect(()=>{
+    try{const c=JSON.parse(localStorage.getItem(LS_CAT))||[];setCatalogue(c)}catch{}
+  },[]);
+  useEffect(()=>localStorage.setItem(LS_JOBS,JSON.stringify(jobs)),[jobs]);
+  useEffect(()=>localStorage.setItem(LS_SETTINGS,JSON.stringify(settings)),[settings]);
+
+  const setSetting=k=>e=>setSettings(p=>({...p,[k]:parseFloat(e.target.value)||0}));
+  const setField=k=>e=>setForm(p=>({...p,[k]:e.target.value}));
+
+  const handleProductPick=e=>{
+    const id=e.target.value;
+    setSelectedProduct(id);
+    setAutofilled(false);
+    if(!id){return;}
+    const p=catalogue.find(c=>c.id===id);
+    if(!p)return;
+    const grams=Math.round(p.printGrams*(1+(p.wastePct||5)/100)*10)/10;
+    const mins=Math.round(p.printHours*60);
+    setForm({name:p.name,filament:p.filament||'PETG',grams:String(grams),mins:String(mins)});
+    setAutofilled(true);
+  };
+
+  const handleAdd=()=>{
+    const g=parseFloat(form.grams);
+    const m=parseFloat(form.mins);
+    if(!form.name.trim()||isNaN(g)||isNaN(m)||g<=0||m<=0)return;
+    setJobs(p=>[...p,{id:uid(),name:form.name.trim(),filament:form.filament,grams:g,mins:m,fromCatalogue:!!selectedProduct,date:Date.now()}]);
+    setForm(emptyForm);
+    setSelectedProduct('');
+    setAutofilled(false);
+  };
+
+  const del=id=>setJobs(p=>p.filter(j=>j.id!==id));
+  const clearAll=()=>{if(confirm('Clear all jobs from the queue?'))setJobs([])};
+
+  const totals=useMemo(()=>{
+    let filCost=0,elec=0,grams=0,mins=0;
+    jobs.forEach(j=>{const c=calcJob(j,settings);filCost+=c.filCost;elec+=c.elec;grams+=j.grams;mins+=j.mins});
+    return{filCost,elec,grams,mins,total:filCost+elec};
+  },[jobs,settings]);
+
+  const canAdd=form.name.trim()&&parseFloat(form.grams)>0&&parseFloat(form.mins)>0;
+
+  return(
+    <>
+      <h1>Print queue forecaster</h1>
+      <p className="sub">Build your print queue — see total time & material cost</p>
+      <div className="layout">
+        {/* LEFT */}
+        <div>
+          <p className="section-label">Add a job</p>
+          <div className="card">
+            {/* Catalogue picker */}
+            <div className="catalogue-picker">
+              <div className="catalogue-picker-label">Load from catalogue (optional)</div>
+              {catalogue.length===0
+                ?<p className="no-catalogue">No products in catalogue yet — add products in rv3d-catalogue.html first, then open this file from the same browser.</p>
+                :<select value={selectedProduct} onChange={handleProductPick}>
+                  <option value="">— pick a product —</option>
+                  {catalogue.map(p=><option key={p.id} value={p.id}>{p.name} ({p.filament}, {p.printGrams}g, {p.printHours}h)</option>)}
+                </select>
+              }
+              {autofilled&&<div className="autofilled">✓ Fields filled from catalogue — adjust if needed</div>}
+              {!autofilled&&catalogue.length>0&&<p className="catalogue-hint">Or fill in the fields below manually</p>}
+            </div>
+
+            <div className="field">
+              <label>Job name</label>
+              <input type="text" value={form.name} onChange={setField('name')} placeholder="e.g. Awning clip ×4"/>
+            </div>
+            <div className="field">
+              <label>Filament</label>
+              <select value={form.filament} onChange={setField('filament')}>{FILAMENTS.map(f=><option key={f}>{f}</option>)}</select>
+            </div>
+            <div className="row2">
+              <div className="field">
+                <label>Filament weight</label>
+                <div className="affix-wrap">
+                  <input type="number" min={0} step={0.1} value={form.grams} onChange={setField('grams')} placeholder="0"/>
+                  <span className="affix">g</span>
+                </div>
+              </div>
+              <div className="field">
+                <label>Print time</label>
+                <div className="affix-wrap">
+                  <input type="number" min={0} step={1} value={form.mins} onChange={setField('mins')} placeholder="0"/>
+                  <span className="affix">min</span>
+                </div>
+              </div>
+            </div>
+            <button className="btn btn-primary btn-full" disabled={!canAdd} onClick={handleAdd}>+ Add to queue</button>
+          </div>
+
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <p className="section-label" style={{margin:0}}>Queue — {jobs.length} job{jobs.length!==1?'s':''}</p>
+            {jobs.length>0&&<button className="btn btn-sm btn-danger" onClick={clearAll}>Clear all</button>}
+          </div>
+          {jobs.length===0
+            ?<div className="empty-queue">No jobs yet — add your first one above.</div>
+            :<div className="job-list">{jobs.map(j=><JobCard key={j.id} job={j} settings={settings} onDelete={del}/>)}</div>
+          }
+        </div>
+
+        {/* RIGHT */}
+        <div>
+          <p className="section-label">Printer settings</p>
+          <div className="card">
+            <div className="field"><label>Spool cost</label><div className="affix-wrap"><span className="affix">A$</span><input type="number" min={0} step={0.5} value={settings.spoolCost} onChange={setSetting('spoolCost')}/></div></div>
+            <div className="field"><label>Spool weight</label><div className="affix-wrap"><input type="number" min={1} step={50} value={settings.spoolWeight} onChange={setSetting('spoolWeight')}/><span className="affix">g</span></div></div>
+            <div className="field"><label>Printer draw</label><div className="affix-wrap"><input type="number" min={0} step={10} value={settings.powerWatts} onChange={setSetting('powerWatts')}/><span className="affix">W</span></div></div>
+            <div className="field" style={{margin:0}}><label>Power rate</label><div className="affix-wrap"><span className="affix">A$</span><input type="number" min={0} step={0.01} value={settings.powerRate} onChange={setSetting('powerRate')}/><span className="affix">/kWh</span></div></div>
+          </div>
+
+          {jobs.length>0&&<>
+            <p className="section-label">Queue summary</p>
+            <div className="card" style={{padding:'1rem'}}>
+              <div className="summary-grid">
+                <div className="sum-card accent">
+                  <div className="sum-label">Total time</div>
+                  <div className="sum-value">{fTime(totals.mins)}</div>
+                </div>
+                <div className="sum-card">
+                  <div className="sum-label">Total filament</div>
+                  <div className="sum-value">{Math.round(totals.grams*10)/10}g</div>
+                </div>
+                <div className="sum-card">
+                  <div className="sum-label">Spools needed</div>
+                  <div className="sum-value">{settings.spoolWeight>0?(totals.grams/settings.spoolWeight).toFixed(2):'—'}</div>
+                </div>
+                <div className="sum-card green">
+                  <div className="sum-label">Jobs</div>
+                  <div className="sum-value">{jobs.length}</div>
+                </div>
+              </div>
+              <div className="total-box">
+                <span className="total-box-label">Total material cost</span>
+                <span className="total-box-value">{fAUD(totals.total)}</span>
+              </div>
+              <Bar label="Filament" value={totals.filCost} total={totals.total} color="#378ADD"/>
+              <Bar label="Electricity" value={totals.elec} total={totals.total} color="#1D9E75"/>
+              <div style={{fontSize:12,color:'#888780',marginTop:10}}>Excludes labour & overhead. Use the cost estimator for full pricing.</div>
+            </div>
+          </>}
+        </div>
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

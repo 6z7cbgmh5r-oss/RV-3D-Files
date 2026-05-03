@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Customer Pain Points — RV 3D</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;padding:2rem 1rem}
+#root{max-width:1100px;margin:0 auto}
+h1{font-size:22px;font-weight:500;margin-bottom:4px}
+.sub{font-size:14px;color:#5f5e5a;margin-bottom:1.5rem}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem}
+.btn{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:7px 14px;font-size:14px;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit}
+.btn:hover{background:#f1efe8}
+.btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#a32d2d;border-color:rgba(163,45,45,0.3)}
+.btn-danger:hover{background:#fcebeb}
+.btn-sm{padding:4px 10px;font-size:12px}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
+@media(max-width:700px){.board{grid-template-columns:1fr 1fr}}
+@media(max-width:450px){.board{grid-template-columns:1fr}}
+.col{background:#eeede8;border-radius:14px;padding:12px}
+.col-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.col-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.col-count{font-size:12px;background:rgba(0,0,0,0.08);border-radius:99px;padding:2px 8px;font-weight:500}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:box-shadow 0.15s}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.card:last-child{margin-bottom:0}
+.card-title{font-size:14px;font-weight:500;margin-bottom:6px;line-height:1.4}
+.card-desc{font-size:12px;color:#5f5e5a;line-height:1.5;margin-bottom:8px}
+.card-meta{display:flex;justify-content:space-between;align-items:center}
+.severity{display:flex;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-fill{background:#e05c2a}
+.dot-empty{background:#d3d1c7}
+.source-badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:500}
+.card-actions{display:flex;gap:5px;margin-top:8px}
+.move-btn{font-size:11px;padding:3px 8px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;background:#f5f4f0;cursor:pointer;color:#1a1a18}
+.move-btn:hover{background:#e8e7e2}
+.move-btn:disabled{opacity:0.3;cursor:default}
+select,input[type=text],textarea{border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;padding:6px 10px;font-size:14px;background:#fff;color:#1a1a18;outline:none;font-family:inherit}
+select:focus,input:focus,textarea:focus{border-color:#378add;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
+textarea{width:100%;resize:vertical;min-height:80px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:18px;font-weight:500;margin-bottom:1.25rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:13px;color:#5f5e5a;margin-bottom:4px}
+.field select,.field input,.field textarea{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row-btns{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem}
+.row-btns-right{display:flex;gap:8px}
+.empty-col{font-size:12px;color:#888780;text-align:center;padding:1rem 0;font-style:italic}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect}=React;
+const COLS=['Captured','Validating','Worth Solving',"Won't Fix"];
+const SOURCES=['Forum/Community','Direct feedback','Observation','Facebook group','Other'];
+const LS='rv3d_painpoints';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const SRC_BG={Forum:'#E6F1FB','Direct feedback':'#EAF3DE',Observation:'#FAEEDA','Facebook group':'#FBEAF0',Other:'#F1EFE8'};
+const SRC_TX={Forum:'#185FA5','Direct feedback':'#27500A',Observation:'#854F0B','Facebook group':'#72243E',Other:'#5F5E5A'};
+function srcStyle(s){const k=Object.keys(SRC_BG).find(k=>s.startsWith(k))||'Other';return{background:SRC_BG[k],color:SRC_TX[k]}}
+const blank={title:'',description:'',severity:3,source:'Forum/Community',column:'Captured'};
+
+function Dots({n}){return <div className="severity">{[1,2,3,4,5].map(i=><div key={i} className={`dot ${i<=n?'dot-fill':'dot-empty'}`}/>)}</div>}
+
+function Modal({item,onSave,onDelete,onClose}){
+  const[f,setF]=useState(item||blank);
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  return(
+    <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+      <div className="modal">
+        <h2>{item?'Edit pain point':'New pain point'}</h2>
+        <div className="field"><label>Pain point</label><input value={f.title} onChange={set('title')} placeholder="What's the problem?"/></div>
+        <div className="field"><label>Description / context</label><textarea value={f.description} onChange={set('description')} placeholder="Where did you see this? Who experiences it? How often?"/></div>
+        <div className="grid2">
+          <div className="field"><label>Severity (1–5)</label>
+            <select value={f.severity} onChange={e=>setF(p=>({...p,severity:+e.target.value}))}>
+              {[1,2,3,4,5].map(n=><option key={n} value={n}>{n} — {['Trivial','Minor','Moderate','Significant','Critical'][n-1]}</option>)}
+            </select>
+          </div>
+          <div className="field"><label>Source</label><select value={f.source} onChange={set('source')}>{SOURCES.map(s=><option key={s}>{s}</option>)}</select></div>
+        </div>
+        <div className="field"><label>Column</label><select value={f.column} onChange={set('column')}>{COLS.map(c=><option key={c}>{c}</option>)}</select></div>
+        <div className="row-btns">
+          <div>{item&&<button className="btn btn-danger btn-sm" onClick={()=>{if(confirm('Delete?'))onDelete(item.id)}}>Delete</button>}</div>
+          <div className="row-btns-right">
+            <button className="btn" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={()=>f.title.trim()&&onSave(f)}>Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Card({item,colIdx,onEdit,onMove}){
+  return(
+    <div className="card" onClick={()=>onEdit(item)}>
+      <div className="card-title">{item.title}</div>
+      {item.description&&<div className="card-desc">{item.description.length>100?item.description.slice(0,100)+'…':item.description}</div>}
+      <div className="card-meta">
+        <Dots n={item.severity}/>
+        <span className="source-badge" style={srcStyle(item.source)}>{item.source}</span>
+      </div>
+      <div className="card-actions" onClick={e=>e.stopPropagation()}>
+        <button className="move-btn" disabled={colIdx===0} onClick={()=>onMove(item.id,-1)}>← Back</button>
+        <button className="move-btn" disabled={colIdx===COLS.length-1} onClick={()=>onMove(item.id,1)}>Forward →</button>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[items,setItems]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS))||[]}catch{return[]}});
+  const[modal,setModal]=useState(null);
+  useEffect(()=>localStorage.setItem(LS,JSON.stringify(items)),[items]);
+  const save=f=>{
+    if(modal==='new')setItems(p=>[{...f,id:uid(),date:Date.now()},...p]);
+    else setItems(p=>p.map(i=>i.id===modal.id?{...i,...f}:i));
+    setModal(null);
+  };
+  const del=id=>{setItems(p=>p.filter(i=>i.id!==id));setModal(null)};
+  const move=(id,dir)=>setItems(p=>p.map(i=>{
+    if(i.id!==id)return i;
+    const ci=COLS.indexOf(i.column);
+    const ni=ci+dir;
+    return ni>=0&&ni<COLS.length?{...i,column:COLS[ni]}:i;
+  }));
+  return(
+    <>
+      <div className="topbar">
+        <div><h1>Customer pain points</h1><p className="sub">RV 3D — problems worth solving</p></div>
+        <button className="btn btn-primary" onClick={()=>setModal('new')}>+ Add pain point</button>
+      </div>
+      <div className="board">
+        {COLS.map((col,ci)=>{
+          const cards=items.filter(i=>i.column===col).sort((a,b)=>b.severity-a.severity||b.date-a.date);
+          return(
+            <div className="col" key={col}>
+              <div className="col-header">
+                <span className="col-title">{col}</span>
+                <span className="col-count">{cards.length}</span>
+              </div>
+              {cards.length===0&&<div className="empty-col">Empty</div>}
+              {cards.map(item=><Card key={item.id} item={item} colIdx={ci} onEdit={setModal} onMove={move}/>)}
+            </div>
+          );
+        })}
+      </div>
+      {modal&&<Modal item={modal==='new'?null:modal} onSave={save} onDelete={del} onClose={()=>setModal(null)}/>}
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
